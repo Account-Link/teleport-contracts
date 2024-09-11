@@ -9,9 +9,9 @@ contract MyScript is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         NFT nft = new NFT(
-            "Teleport",
-            "TPN",
-            "test",
+            "Account.link",
+            "account.link",
+            "https://account.link/metadata/",
             address(0x36e7Fda8CC503D5Ec7729A42eb86EF02Af315Bf9)
         );
 
