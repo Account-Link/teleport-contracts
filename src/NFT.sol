@@ -22,6 +22,9 @@ contract NFT is ERC721, Ownable {
     // Mapping from token ID to its data
     mapping(uint256 => TokenData) private tokenDataMap;
 
+    // Whitelisted addresses
+    mapping(address => bool) public isWhitelisted;
+
     // Event emitted on top of `ERC20::Transfer` for granularity & indexer data availability
     event NewTokenData(
         uint256 indexed tokenId,
@@ -43,6 +46,10 @@ contract NFT is ERC721, Ownable {
         string policy,
         string tweetId
     );
+    // Event to be emitted upon whitelisting of a minter
+    event WhitelistMinter(address indexed minter);
+    // Event to be emitted upon removing a minter
+    event RemoveMinter(address indexed minter);
 
     string public baseURI;
     uint256 public currentTokenId;
@@ -56,11 +63,22 @@ contract NFT is ERC721, Ownable {
         baseURI = _baseURI;
     }
 
+    function whitelistMinter(address minter) public onlyOwner {
+        isWhitelisted[minter] = true;
+        emit WhitelistMinter(minter);
+    }
+
+    function removeMinter(address minter) public onlyOwner {
+        isWhitelisted[minter] = false;
+        emit RemoveMinter(minter);
+    }
+
     function mintTo(
         address recipient,
         uint256 x_id,
         string memory policy
-    ) public onlyOwner returns (uint256) {
+    ) public returns (uint256) {
+        require(isWhitelisted[msg.sender], "Caller is not whitelisted");
         uint256 newTokenId = ++currentTokenId;
         _safeMint(recipient, newTokenId);
 
@@ -90,7 +108,7 @@ contract NFT is ERC721, Ownable {
         TokenType tokenType
     ) public {
         require(
-            ownerOf(tokenId) == msg.sender || msg.sender == owner(),
+            ownerOf(tokenId) == msg.sender || isWhitelisted[msg.sender],
             "Caller is not the token owner or the contract owner"
         );
 
