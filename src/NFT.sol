@@ -26,26 +26,11 @@ contract NFT is ERC721, Ownable {
     mapping(address => bool) public isWhitelisted;
 
     // Event emitted on top of `ERC20::Transfer` for granularity & indexer data availability
-    event NewTokenData(
-        uint256 indexed tokenId,
-        uint256 indexed x_id,
-        address to,
-        string policy
-    );
+    event NewTokenData(uint256 indexed tokenId, uint256 indexed x_id, address to, string policy);
     // Event to be emitted upon redemption of a tweet
-    event RedeemTweet(
-        uint256 indexed tokenId,
-        uint256 indexed x_id,
-        string policy,
-        string content
-    );
+    event RedeemTweet(uint256 indexed tokenId, uint256 indexed x_id, string policy, string content);
     // Event to be emitted upon redemption of a tweet like
-    event RedeemLike(
-        uint256 indexed tokenId,
-        uint256 indexed x_id,
-        string policy,
-        string tweetId
-    );
+    event RedeemLike(uint256 indexed tokenId, uint256 indexed x_id, string policy, string tweetId);
     // Event to be emitted upon whitelisting of a minter
     event WhitelistMinter(address indexed minter);
     // Event to be emitted upon removing a minter
@@ -54,12 +39,10 @@ contract NFT is ERC721, Ownable {
     string public baseURI;
     uint256 public currentTokenId;
 
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        string memory _baseURI,
-        address initialOwner
-    ) ERC721(_name, _symbol) Ownable(initialOwner) {
+    constructor(string memory _name, string memory _symbol, string memory _baseURI, address initialOwner)
+        ERC721(_name, _symbol)
+        Ownable(initialOwner)
+    {
         baseURI = _baseURI;
     }
 
@@ -73,11 +56,7 @@ contract NFT is ERC721, Ownable {
         emit RemoveMinter(minter);
     }
 
-    function mintTo(
-        address recipient,
-        uint256 x_id,
-        string memory policy
-    ) public returns (uint256) {
+    function mintTo(address recipient, uint256 x_id, string memory policy) public returns (uint256) {
         require(isWhitelisted[msg.sender], "Caller is not whitelisted");
         uint256 newTokenId = ++currentTokenId;
         _safeMint(recipient, newTokenId);
@@ -89,24 +68,15 @@ contract NFT is ERC721, Ownable {
         return newTokenId;
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view override returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         if (ownerOf(tokenId) == address(0)) {
             revert NonExistentTokenURI();
         }
-        return
-            bytes(baseURI).length > 0
-                ? string.concat(baseURI, tokenId.toString())
-                : "";
+        return bytes(baseURI).length > 0 ? string.concat(baseURI, tokenId.toString()) : "";
     }
 
     // Redeem function that emits an event
-    function redeem(
-        uint256 tokenId,
-        string memory content,
-        TokenType tokenType
-    ) public {
+    function redeem(uint256 tokenId, string memory content, TokenType tokenType) public {
         require(
             ownerOf(tokenId) == msg.sender || isWhitelisted[msg.sender],
             "Caller is not the token owner or the contract owner"
