@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 
 contract NFT is ERC721, Ownable {
     using Strings for uint256;
@@ -17,6 +18,8 @@ contract NFT is ERC721, Ownable {
     struct TokenData {
         uint256 x_id;
         string policy;
+        string username;
+        string pfp;
     }
 
     // Mapping from token ID to its data
@@ -51,17 +54,13 @@ contract NFT is ERC721, Ownable {
     // Event to be emitted upon removing a minter
     event RemoveMinter(address indexed minter);
 
-    string public baseURI;
     uint256 public currentTokenId;
 
     constructor(
         string memory _name,
         string memory _symbol,
-        string memory _baseURI,
         address initialOwner
-    ) ERC721(_name, _symbol) Ownable(initialOwner) {
-        baseURI = _baseURI;
-    }
+    ) ERC721(_name, _symbol) Ownable(initialOwner) {}
 
     function whitelistMinter(address minter) public onlyOwner {
         isWhitelisted[minter] = true;
@@ -76,13 +75,15 @@ contract NFT is ERC721, Ownable {
     function mintTo(
         address recipient,
         uint256 x_id,
-        string memory policy
+        string memory policy,
+        string memory username,
+        string memory pfp
     ) public returns (uint256) {
         require(isWhitelisted[msg.sender], "Caller is not whitelisted");
         uint256 newTokenId = ++currentTokenId;
         _safeMint(recipient, newTokenId);
 
-        tokenDataMap[newTokenId] = TokenData(x_id, policy);
+        tokenDataMap[newTokenId] = TokenData(x_id, policy, username, pfp);
 
         emit NewTokenData(newTokenId, x_id, recipient, policy);
 
@@ -95,10 +96,49 @@ contract NFT is ERC721, Ownable {
         if (ownerOf(tokenId) == address(0)) {
             revert NonExistentTokenURI();
         }
-        return
-            bytes(baseURI).length > 0
-                ? string.concat(baseURI, tokenId.toString())
-                : "";
+        // return
+        //     bytes(baseURI).length > 0
+        //         ? string.concat(baseURI, tokenId.toString())
+        //         : "";
+
+        TokenData memory data = tokenDataMap[tokenId];
+
+        string memory name = string(
+            abi.encodePacked("Teleport to ", data.username)
+        );
+
+        string memory description = string(
+            abi.encodePacked(
+                "Allows you to post once from ",
+                data.username,
+                "'s account if your post passes the following check by the LLM: ",
+                "'",
+                data.policy,
+                "'"
+            )
+        );
+
+        string memory json = Base64.encode(
+            bytes(
+                string(
+                    abi.encodePacked(
+                        '{"description": "',
+                        description,
+                        '", "image": "',
+                        data.pfp,
+                        '", "name": "',
+                        name,
+                        '", "attributes": [{"trait_type": "X Username", "value": "',
+                        data.username,
+                        '"}, {"trait_type": "LLM safeguard", "value": "',
+                        data.policy,
+                        '"}]}'
+                    )
+                )
+            )
+        );
+
+        return string(abi.encodePacked("data:application/json;base64,", json));
     }
 
     // Redeem function that emits an event

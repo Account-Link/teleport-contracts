@@ -9,12 +9,7 @@ contract MyScript is Script {
         address minter = 0xA4D75b152D56D703D46B5a2c37096B3eCb06C7FD;
         vm.startBroadcast(deployerPrivateKey);
 
-        NFT nft = new NFT(
-            "Account.link",
-            "account.link",
-            "https://account.link/metadata/",
-            minter
-        );
+        NFT nft = new NFT("Account.link", "account.link", minter);
 
         nft.whitelistMinter(minter);
 
