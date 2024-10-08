@@ -1,0 +1,12 @@
+[project]
+name = "parse-tokens"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "eth-abi>=5.1.0",
+    "pandas>=2.2.3",
+    "tqdm>=4.66.5",
+    "web3>=7.3.0",
+]
