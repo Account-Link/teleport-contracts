@@ -17,6 +17,7 @@ contract NFT is ERC721, Ownable {
 
     struct TokenData {
         uint256 x_id;
+        address addr;
         string policy;
         string username;
         string pfp;
@@ -36,12 +37,15 @@ contract NFT is ERC721, Ownable {
         uint256 indexed tokenId,
         uint256 indexed x_id,
         address to,
-        string policy
+        string policy,
+	string username,
+	string pfp
     );
     // Event to be emitted upon redemption of a tweet
     event RedeemTweet(
         uint256 indexed tokenId,
         uint256 indexed x_id,
+	address addr,
         string policy,
         string content
     );
@@ -88,11 +92,11 @@ contract NFT is ERC721, Ownable {
         uint256 newTokenId = ++currentTokenId;
         _safeMint(recipient, newTokenId);
 
-        tokenDataMap[newTokenId] = TokenData(x_id, policy, username, pfp);
+        tokenDataMap[newTokenId] = TokenData(x_id, recipient, policy, username, pfp);
 
 	nftIdMap[nftIdHash] = newTokenId;
 
-        emit NewTokenData(newTokenId, x_id, recipient, policy);
+        emit NewTokenData(newTokenId, x_id, recipient, policy, username, pfp);
 
         return newTokenId;
     }
@@ -163,7 +167,7 @@ contract NFT is ERC721, Ownable {
 
         // emit RedeemTweet(tokenId, data.x_id, data.policy, content);
         if (tokenType == TokenType.TWEET) {
-            emit RedeemTweet(tokenId, data.x_id, data.policy, content);
+            emit RedeemTweet(tokenId, data.x_id, data.addr, data.policy, content);
         } else if (tokenType == TokenType.LIKE) {
             emit RedeemLike(tokenId, data.x_id, data.policy, content);
         } else {
