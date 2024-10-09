@@ -6,13 +6,10 @@ import "../src/NFT.sol";
 contract MyScript is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address minter = 0xA4D75b152D56D703D46B5a2c37096B3eCb06C7FD;
+        address minter = 0x8DA7e42D1800eDd66F0cefA21c0c67A65CC72A74;
         vm.startBroadcast(deployerPrivateKey);
-
         NFT nft = new NFT("Account.link", "account.link", minter);
-
         nft.whitelistMinter(minter);
-
         vm.stopBroadcast();
     }
 }
