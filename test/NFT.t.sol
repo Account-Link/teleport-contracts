@@ -24,9 +24,11 @@ contract NFTTest is Test {
         string memory pfp = "https://example.com/pfp.jpg";
 
         vm.prank(minter);
-        uint256 tokenId = nft.mintTo(recipient, x_id, policy, username, pfp);
+        uint256 tokenId = nft.mintTo(recipient, x_id, policy, username, pfp, keccak256("asdf"));
 
         string memory uri = nft.tokenURI(tokenId);
+
+	assertEq(nft.nftIdMap(keccak256("asdf")), 1);
 
         // Print out the URI
         console.log("Token URI:", uri);

@@ -22,6 +22,9 @@ contract NFT is ERC721, Ownable {
         string pfp;
     }
 
+    // Mapping from Hash(nftId) to token ID
+    mapping(bytes32 => uint256) public nftIdMap;
+
     // Mapping from token ID to its data
     mapping(uint256 => TokenData) private tokenDataMap;
 
@@ -77,13 +80,17 @@ contract NFT is ERC721, Ownable {
         uint256 x_id,
         string memory policy,
         string memory username,
-        string memory pfp
+        string memory pfp,
+	bytes32 nftIdHash
     ) public returns (uint256) {
         require(isWhitelisted[msg.sender], "Caller is not whitelisted");
+	require(nftIdMap[nftIdHash] == 0);
         uint256 newTokenId = ++currentTokenId;
         _safeMint(recipient, newTokenId);
 
         tokenDataMap[newTokenId] = TokenData(x_id, policy, username, pfp);
+
+	nftIdMap[nftIdHash] = newTokenId;
 
         emit NewTokenData(newTokenId, x_id, recipient, policy);
 
