@@ -22,6 +22,7 @@ contract NFT is ERC721, Ownable {
         string name;
         string username;
         string pfp;
+        uint256 tweetTime;
     }
 
     // Mapping from Hash(nftId) to token ID
@@ -41,7 +42,8 @@ contract NFT is ERC721, Ownable {
         string policy,
         string name,
         string username,
-        string pfp
+        string pfp,
+        uint256 tweetTime
     );
     // Event to be emitted upon redemption of a tweet
     event RedeemTweet(
@@ -62,6 +64,12 @@ contract NFT is ERC721, Ownable {
     event WhitelistMinter(address indexed minter);
     // Event to be emitted upon removing a minter
     event RemoveMinter(address indexed minter);
+    // Event to be emitted upon updating tweet time
+    event TweetTimeUpdated(
+        uint256 indexed tokenId,
+        uint256 oldTweetTime,
+        uint256 newTweetTime
+    );
 
     uint256 public currentTokenId;
 
@@ -88,10 +96,12 @@ contract NFT is ERC721, Ownable {
         string memory name,
         string memory username,
         string memory pfp,
-        bytes32 nftIdHash
+        bytes32 nftIdHash,
+        uint256 usesLeft
     ) public returns (uint256) {
         require(isWhitelisted[msg.sender], "Caller is not whitelisted");
         require(nftIdMap[nftIdHash] == 0);
+        require(usesLeft > 0, "Uses left is 0");
         uint256 newTokenId = ++currentTokenId;
         _safeMint(recipient, newTokenId);
 
@@ -101,7 +111,8 @@ contract NFT is ERC721, Ownable {
             policy,
             name,
             username,
-            pfp
+            pfp,
+            usesLeft
         );
 
         nftIdMap[nftIdHash] = newTokenId;
@@ -113,7 +124,8 @@ contract NFT is ERC721, Ownable {
             policy,
             name,
             username,
-            pfp
+            pfp,
+            usesLeft
         );
 
         return newTokenId;
@@ -161,6 +173,8 @@ contract NFT is ERC721, Ownable {
                         data.username,
                         '"}, {"trait_type": "LLM safeguard", "value": "',
                         data.policy,
+                        '"}, {"trait_type": "Tweet Time Left", "value": "',
+                        data.tweetTime,
                         '"}, {"trait_type": "X Name", "value": "',
                         data.name,
                         '"}]}'
@@ -183,7 +197,9 @@ contract NFT is ERC721, Ownable {
             "Caller is not the token owner or the contract owner"
         );
 
-        TokenData memory data = tokenDataMap[tokenId];
+        TokenData storage data = tokenDataMap[tokenId];
+
+        require(data.tweetTime > 0, "Uses left is 0");
 
         // emit RedeemTweet(tokenId, data.x_id, data.policy, content);
         if (tokenType == TokenType.TWEET) {
@@ -200,7 +216,20 @@ contract NFT is ERC721, Ownable {
             revert("Invalid token type");
         }
 
-        // burn NFT
-        _burn(tokenId);
+        // update uses left
+        data.tweetTime--;
+
+        if (data.tweetTime == 0) {
+            // burn NFT
+            _burn(tokenId);
+        }
+    }
+
+    function addTweetTime(uint256 tokenId, uint256 time) public {
+        require(isWhitelisted[msg.sender], "Caller is not the contract owner");
+        TokenData storage data = tokenDataMap[tokenId];
+        uint256 oldTweetTime = data.tweetTime;
+        data.tweetTime += time;
+        emit TweetTimeUpdated(tokenId, oldTweetTime, data.tweetTime);
     }
 }

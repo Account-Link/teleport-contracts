@@ -32,7 +32,8 @@ contract NFTTest is Test {
             name,
             username,
             pfp,
-            keccak256("asdf")
+            keccak256("asdf"),
+            1
         );
 
         string memory uri = nft.tokenURI(tokenId);
